@@ -5,43 +5,7 @@ import 'dart:math';
 
 import 'math.dart';
 
-class Foo {
-  Foo({
-    required this.xMax,
-    required this.xSteps,
-    required this.ySteps,
-    required this.xMin,
-    required this.yMax,
-    required this.yMin,
-  });
-  double xMax;
-  double xMin;
-  double yMax;
-  double yMin;
-  int xSteps;
-  int ySteps;
-}
-
-Map<Alignment, Color> fooo(Foo foo) {
-  final image = <Alignment, Color>{};
-  double dAx = 2 / (foo.xSteps - 1);
-  double dAy = 2 / (foo.ySteps - 1);
-  double dx = (foo.xMax - foo.xMin) / (foo.xSteps - 1);
-  double dy = (foo.yMax - foo.yMin) / (foo.ySteps - 1);
-  for (int i = 0; i < foo.xSteps; i++) {
-    final x = foo.xMin + dx * i;
-    final ax = -1 + dAx * i;
-    for (int j = 0; j < foo.ySteps; j++) {
-      final y = foo.yMin + dy * j;
-      final ay = -1 + dAy * j;
-      image[Alignment(ax, ay)] =
-          colorByInt(getM(Point(x, y), const Point<double>(0, 0)));
-    }
-  }
-  return image;
-}
-
-int maxCount = 20;
+int maxCount = 1048;
 
 int getM(Point<double> c, Point<double> z0) {
   int count = 0;
@@ -60,15 +24,6 @@ int getM(Point<double> c, Point<double> z0) {
     }
   }
   return -1;
-}
-
-Color colorByInt(int x) {
-  if (x == -1) {
-    return Colors.black;
-  }
-  return ColorTween(begin: Colors.blue, end: Colors.white).lerp(
-    x / maxCount,
-  )!;
 }
 
 void main() {
@@ -90,99 +45,169 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage();
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Map<Alignment, Color>? image;
+  late List<Color> colors;
+  double fWidthBase = 4;
+  double fHeightBase = 4;
+  double fMagnitude = 1;
+  double get fWidth => fWidthBase * exp(fMagnitude);
+  double get fHeight => fHeightBase * exp(fMagnitude);
+  Offset fCenter = Offset.zero;
   Offset? px, dpx;
-  final foo = Foo(
-    xMax: 2,
-    xMin: -2,
-    yMax: 2,
-    yMin: -2,
-    xSteps: 100,
-    ySteps: 100,
-  );
+  Offset? sumPx;
+  int xSteps = 100;
+  int ySteps = 100;
 
-  void comp() async {
-    final newValue = await compute(fooo, foo);
-    setState(() => image = newValue);
+  double get xMax => fCenter.dx + fWidth / 2;
+  double get xMin => fCenter.dx - fWidth / 2;
+  double get yMax => fCenter.dy + fHeight / 2;
+  double get yMin => fCenter.dy - fHeight / 2;
+
+  Color colorByInt(int x) {
+    if (x == -1) {
+      return Colors.black;
+    }
+    return colors[x];
+  }
+
+  List<Color> lerpGenerator(int outputLength, List<Color> input) {
+    final colors = <Color>[];
+    double ratio = outputLength / (input.length - 1);
+    for (int i = 0; i < outputLength; i++) {
+      int colorIndex = i ~/ ratio;
+      double v = i / ratio - colorIndex;
+      colors.add(
+        ColorTween(begin: input[colorIndex], end: input[colorIndex + 1])
+            .lerp(v)!,
+      );
+    }
+    return colors..add(input.last);
   }
 
   @override
   void initState() {
-    comp();
+    colors = lerpGenerator(maxCount, [
+      Colors.deepPurple,
+      Colors.indigo,
+      Colors.blueAccent,
+      Colors.green,
+      Colors.yellowAccent,
+      Colors.orange,
+      Colors.red,
+      Colors.purple
+    ]);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final image = <Alignment, Color>{};
+    double dAx = 2 / (xSteps - 1);
+    double dAy = 2 / (ySteps - 1);
+    double dx = fWidth / (xSteps - 1);
+    double dy = fHeight / (ySteps - 1);
+    for (int i = 0; i < xSteps; i++) {
+      final x = xMin + dx * i;
+      final ax = -1 + dAx * i;
+      for (int j = 0; j < ySteps; j++) {
+        final y = yMin + dy * j;
+        final ay = -1 + dAy * j;
+        image[Alignment(ax, ay)] =
+            colorByInt(getM(Point(x, y), const Point<double>(0, 0)));
+      }
+    }
+
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final height = constraints.maxWidth / foo.ySteps;
-            final width = constraints.maxWidth / foo.xSteps;
+        child: Column(
+          children: [
+            const Spacer(),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final height = constraints.maxWidth / ySteps;
+                final width = constraints.maxWidth / xSteps;
 
-            return Center(
-              child: SizedBox(
-                height: constraints.maxWidth,
-                width: constraints.maxWidth,
-                child: GestureDetector(
-                  onPanStart: (value) {
-                    px = value.localPosition;
-                  },
-                  onPanUpdate: (value) {
-                    dpx = value.localPosition - px!;
+                return Center(
+                  child: SizedBox(
+                    height: constraints.maxWidth,
+                    width: constraints.maxWidth,
+                    child: GestureDetector(
+                      onPanStart: (value) {
+                        px = value.localPosition;
+                        //   print('novo');
+                      },
+                      onPanUpdate: (value) {
+                        dpx = value.localPosition - px!;
 
-                    final sdx = -dpx!.dx *
-                        (foo.xMax - foo.xMin) /
-                        constraints.maxWidth /
-                        foo.xSteps;
-                    final sdy = -dpx!.dy *
-                        (foo.yMax - foo.yMin) /
-                        constraints.maxHeight /
-                        foo.ySteps;
+                        final sdx =
+                            -dpx!.dx * fWidth / constraints.maxWidth / xSteps;
+                        final sdy =
+                            -dpx!.dy * fHeight / constraints.maxWidth / ySteps;
 
-                    setState(() {
-                      foo.xMax += sdx;
-                      foo.xMin += sdx;
-                      foo.yMax += sdy;
-                      foo.yMin += sdy;
-                    });
+                        setState(() => fCenter += Offset(sdx, sdy));
+                      },
+                      onPanEnd: (_) {
+                        print('deu');
 
-                    comp();
-                  },
-                  onPanEnd: (_) {
-                    px = null;
-                    dpx = null;
-                  },
-                  child: Stack(children: [
-                    if (image != null)
-                      ...image!.entries.map<Widget>((entry) {
-                        return Align(
-                          alignment: entry.key,
-                          child: Container(
-                            height: height,
-                            width: width,
-                            decoration: BoxDecoration(color: entry.value),
-                          ),
-                        );
-                      }).toList(),
-                    Container(
-                      child: Text(
-                          '${foo.xMin.toStringAsFixed(2)}<=x<=${foo.xMax.toStringAsFixed(2)}\n'
-                          '${foo.yMin.toStringAsFixed(2)}<=y<=${foo.yMax.toStringAsFixed(2)}\n'),
+                        px = null;
+                        dpx = null;
+                      },
+                      child: Stack(children: [
+                        ...image.entries.map<Widget>((entry) {
+                          return Align(
+                            alignment: entry.key,
+                            child: Container(
+                              height: height,
+                              width: width,
+                              decoration: BoxDecoration(color: entry.value),
+                            ),
+                          );
+                        }).toList(),
+                      ]),
                     ),
-                  ]),
+                  ),
+                );
+              },
+            ),
+            Spacer(),
+            Container(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: colors.length,
+                itemBuilder: (c, i) => Card(
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    child: Text(i.toString()),
+                  ),
+                  color: colors[i],
                 ),
               ),
-            );
-          },
+            ),
+            Text(
+              'order: 10^${fMagnitude.toStringAsFixed(2)}\n'
+              'center: $fCenter\n'
+              '${xMin.toStringAsExponential(2)}<=x<=${xMax.toStringAsExponential(2)}, width = ${fWidth.toStringAsExponential(2)}\n'
+              '${yMin.toStringAsExponential(2)}<=y<=${yMax.toStringAsExponential(2)}, height = ${fHeight.toStringAsExponential(2)}',
+            ),
+            Slider(
+              value: fMagnitude,
+              min: -34,
+              max: 1,
+              onChanged: (v) {
+                setState(() {
+                  fMagnitude = v;
+                });
+              },
+            ),
+          ],
         ),
       ),
     );
