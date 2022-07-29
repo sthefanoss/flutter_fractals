@@ -1,9 +1,5 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
-
-import 'math.dart';
 
 int maxCount = 1048;
 
@@ -59,15 +55,16 @@ class _MyHomePageState extends State<MyHomePage> {
   double get fWidth => fWidthBase * exp(fMagnitude);
   double get fHeight => fHeightBase * exp(fMagnitude);
   Offset fCenter = Offset.zero;
+  Offset panOffset = Offset.zero;
   Offset? px, dpx;
   Offset? sumPx;
   int xSteps = 100;
   int ySteps = 100;
 
-  double get xMax => fCenter.dx + fWidth / 2;
-  double get xMin => fCenter.dx - fWidth / 2;
-  double get yMax => fCenter.dy + fHeight / 2;
-  double get yMin => fCenter.dy - fHeight / 2;
+  double get xMax => fCenter.dx + panOffset.dx + fWidth / 2;
+  double get xMin => fCenter.dx + panOffset.dx - fWidth / 2;
+  double get yMax => fCenter.dy + panOffset.dy + fHeight / 2;
+  double get yMin => fCenter.dy + panOffset.dy - fHeight / 2;
 
   Color colorByInt(int x) {
     if (x == -1) {
@@ -140,23 +137,21 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: GestureDetector(
                       onPanStart: (value) {
                         px = value.localPosition;
-                        //   print('novo');
+                        panOffset = Offset.zero;
                       },
                       onPanUpdate: (value) {
-                        dpx = value.localPosition - px!;
+                        dpx = (value.localPosition - px!);
 
-                        final sdx =
-                            -dpx!.dx * fWidth / constraints.maxWidth / xSteps;
-                        final sdy =
-                            -dpx!.dy * fHeight / constraints.maxWidth / ySteps;
+                        final sdx = -dpx!.dx * fWidth / constraints.maxWidth;
+                        final sdy = -dpx!.dy * fHeight / constraints.maxWidth;
 
-                        setState(() => fCenter += Offset(sdx, sdy));
+                        setState(() => panOffset = Offset(sdx, sdy));
                       },
                       onPanEnd: (_) {
-                        print('deu');
-
-                        px = null;
-                        dpx = null;
+                        setState(() {
+                          fCenter += panOffset;
+                          panOffset = Offset.zero;
+                        });
                       },
                       child: Stack(children: [
                         ...image.entries.map<Widget>((entry) {
@@ -175,14 +170,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
             ),
-            Spacer(),
-            Container(
+            const Spacer(),
+            SizedBox(
               height: 50,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: colors.length,
                 itemBuilder: (c, i) => Card(
-                  child: Container(
+                  child: SizedBox(
                     width: 50,
                     height: 50,
                     child: Text(i.toString()),
