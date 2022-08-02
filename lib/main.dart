@@ -9,43 +9,18 @@ void main() {
   runApp(const MaterialApp(home: Page()));
 }
 
-/// Will combine loading multiple things
-class PainterNeeds {
-  final ImageShader imageShader;
-  final FragmentProgram fragmentProgram;
-
-  PainterNeeds(this.imageShader, this.fragmentProgram);
-}
-
-/// Loads JPEG image and the [FragmentProgram]
-Future<PainterNeeds> loadPainterNeeds() async {
-  final asset = await rootBundle.load("assets/image.png");
-  final image = await decodeImageFromList(asset.buffer.asUint8List());
-
-  /// Create ImageShader that will provide a GLSL sampler
-  final ImageShader imageShader = ImageShader(
-    image,
-    // Specify how image repetition is handled for x and y dimension
-    TileMode.repeated,
-    TileMode.repeated,
-    // Transformation matrix (identity matrix = no transformation)
-    Matrix4.identity().storage,
-  );
-
-  return PainterNeeds(imageShader, await fooFragmentProgram());
-}
-
 class Page extends StatelessWidget {
   const Page({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<PainterNeeds>(
+      body: FutureBuilder<FragmentProgram>(
 
-        /// Use the generated loader function here
-          future: loadPainterNeeds(),
+          /// Use the generated loader function here
+          future: fooFragmentProgram(),
           builder: ((context, snapshot) {
+            print(snapshot.error);
             if (!snapshot.hasData) {
               /// Shader is loading
               return const CircularProgressIndicator();
@@ -65,21 +40,27 @@ class Page extends StatelessWidget {
 /// Customer painter that makes use of the shader
 class ImageScaleShaderPainter extends CustomPainter {
   ImageScaleShaderPainter(this.painterNeeds);
-
-  final PainterNeeds painterNeeds;
-
+  final FragmentProgram painterNeeds;
   @override
   void paint(Canvas canvas, Size size) {
     /// Create paint using a shader
     final paint = Paint()
-      ..shader = painterNeeds.fragmentProgram.shader(
+      ..shader = painterNeeds.shader(
         floatUniforms: Float32List.fromList([
           // scale uniform
+          0.3,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
           0.5,
         ]),
-        samplerUniforms: [
-          painterNeeds.imageShader,
-        ],
+        // samplerUniforms: [
+        //   painterNeeds.imageShader,
+        // ],
       );
 
     /// Draw a rectangle with the shader-paint
