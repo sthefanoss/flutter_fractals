@@ -1,16 +1,18 @@
 #version 320 es
 
 precision highp float;
+layout(location=0)out vec4 fragColor;
 
-layout(location = 0) out vec4 fragColor;
+layout(location=0)uniform vec2 iResolution;
+layout(location=1)uniform float iTime;
 
-layout(location = 0) uniform vec3 color1;
-layout(location = 1) uniform vec3 color2;
-layout(location = 2) uniform float someValue;
-layout(location = 3) uniform vec2 size;
+void main(){
+	  // Normalized pixel coordinates (from 0 to 1)
+    vec2 uv = gl_FragCoord.xy/iResolution.xy;
 
-void main () {
-    vec4 p = gl_FragCoord[0];
-    fragColor = vec4(1.0,1.0,1.0*cos(), 1.0);
+    // Time varying pixel color
+    vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0.,2.,4.));
 
+    // Output to screen
+    fragColor = vec4(col,1.0);
 }

@@ -48,15 +48,9 @@ class ImageScaleShaderPainter extends CustomPainter {
       ..shader = painterNeeds.shader(
         floatUniforms: Float32List.fromList([
           // scale uniform
-          0.3,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
+          size.height,
+          size.height,
+          DateTime.now().millisecond.toDouble()
         ]),
         // samplerUniforms: [
         //   painterNeeds.imageShader,
