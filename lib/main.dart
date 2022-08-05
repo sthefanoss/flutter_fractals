@@ -9,9 +9,14 @@ void main() {
   runApp(const MaterialApp(home: Page()));
 }
 
-class Page extends StatelessWidget {
+class Page extends StatefulWidget {
   const Page({Key? key}) : super(key: key);
 
+  @override
+  State<Page> createState() => _PageState();
+}
+
+class _PageState extends State<Page> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,14 +52,10 @@ class ImageScaleShaderPainter extends CustomPainter {
     final paint = Paint()
       ..shader = painterNeeds.shader(
         floatUniforms: Float32List.fromList([
-          // scale uniform
-          size.height,
-          size.height,
-          DateTime.now().millisecond.toDouble()
+          0.001,
+          1.0,
+          1.0,
         ]),
-        // samplerUniforms: [
-        //   painterNeeds.imageShader,
-        // ],
       );
 
     /// Draw a rectangle with the shader-paint
