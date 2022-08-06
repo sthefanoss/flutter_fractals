@@ -15,10 +15,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData.dark().copyWith(),
       home: const MyHomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -47,7 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            const Spacer(),
             LayoutBuilder(
               builder: (context, constraints) {
                 return Center(
@@ -106,10 +104,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 '${min.toStringAsExponential(2)}<=x<=${max.toStringAsExponential(2)}, width = ${scale.toStringAsExponential(2)}\n'
                 //'${yMin.toStringAsExponential(2)}<=y<=${yMax.toStringAsExponential(2)}, height = ${fHeight.toStringAsExponential(2)}',
                 ),
-            Slider(
+            Slider.adaptive(
               value: fMagnitude,
-              min: -34,
+              min: -11,
               max: 1,
+              activeColor: Colors.red,
               onChanged: (v) {
                 setState(() {
                   fMagnitude = v;
