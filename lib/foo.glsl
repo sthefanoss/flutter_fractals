@@ -15,9 +15,9 @@ void main(){
     float ii = 0.0;
     float oneThird = 1.0/3.0;
     float twoThirds = 2.0/3.0;
-    c.x = 1.3333 * (uv.x - 0.5) * scale - center.x;
+    c.x = (uv.x - 0.5) * scale - center.x;
     c.y = (uv.y - 0.5) * scale - center.y;
-    for (float i=0.0;i<2.0;i+=0.005) {
+    for (float i=0.0;i<2.0;i+=0.0025) {
         float x = (z.x * z.x - z.y * z.y) + c.x;
         float y = (z.y * z.x + z.x * z.y) + c.y;
         ii = 1.0- i;
@@ -37,7 +37,7 @@ void main(){
     } else {
         r = 1.0;
         g = 1.0;
-        b= (ii-twoThirds) * 3.0;
+        b = (ii-twoThirds) * 3.0;
     }
    fragColor = vec4(r,g,b ,1.0);
 }

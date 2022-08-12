@@ -30,15 +30,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  double fMagnitude = 1;
+  double fMagnitude = 1.5;
   double get scale => exp(fMagnitude);
-  Offset fCenter = Offset(0.5, 0);
+  Offset fCenter = Offset(0, 0);
   Offset panOffset = Offset.zero;
   Offset? px, dpx;
-  Offset? sumPx;
-
-  double get max => fCenter.dx + panOffset.dx + scale / 2;
-  double get min => fCenter.dx + panOffset.dx - scale / 2;
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +51,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPanUpdate: (value) {
                   dpx = (value.localPosition - px!);
 
-                  final sdx = dpx!.dx * scale / constraints.maxWidth;
-                  final sdy = dpx!.dy * scale / constraints.maxWidth;
+                  final sdx = dpx!.dx * scale / constraints.maxHeight;
+                  final sdy = dpx!.dy * scale / constraints.maxHeight;
 
                   setState(() => panOffset = Offset(sdx, sdy));
                 },
@@ -92,16 +88,21 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Container(
               padding: const EdgeInsets.all(10),
               color: Colors.grey.withOpacity(0.2),
-              child: Slider.adaptive(
-                value: fMagnitude,
-                min: -11,
-                max: 1,
-                activeColor: Colors.red,
-                onChanged: (v) {
-                  setState(() {
-                    fMagnitude = v;
-                  });
-                },
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom,
+                ),
+                child: Slider.adaptive(
+                  value: fMagnitude,
+                  min: -11,
+                  max: 1.5,
+                  activeColor: Colors.red,
+                  onChanged: (v) {
+                    setState(() {
+                      fMagnitude = v;
+                    });
+                  },
+                ),
               ),
             ),
           ),
@@ -126,13 +127,14 @@ class ImageScaleShaderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     /// Create paint using a shader
+    ///
     final paint = Paint()
       ..shader = painterNeeds.shader(
         floatUniforms: Float32List.fromList([
           scale,
           center.dx,
           center.dy,
-          size.width,
+          size.height,
           size.height,
         ]),
       );
