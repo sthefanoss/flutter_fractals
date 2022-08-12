@@ -43,80 +43,69 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return Center(
-                  child: SizedBox(
-                    height: constraints.maxWidth,
-                    width: constraints.maxWidth,
-                    child: GestureDetector(
-                      onPanStart: (value) {
-                        px = value.localPosition;
-                        panOffset = Offset.zero;
-                      },
-                      onPanUpdate: (value) {
-                        dpx = (value.localPosition - px!);
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return GestureDetector(
+                onPanStart: (value) {
+                  px = value.localPosition;
+                  panOffset = Offset.zero;
+                },
+                onPanUpdate: (value) {
+                  dpx = (value.localPosition - px!);
 
-                        final sdx = dpx!.dx * scale / constraints.maxWidth;
-                        final sdy = dpx!.dy * scale / constraints.maxWidth;
+                  final sdx = dpx!.dx * scale / constraints.maxWidth;
+                  final sdy = dpx!.dy * scale / constraints.maxWidth;
 
-                        setState(() => panOffset = Offset(sdx, sdy));
-                      },
-                      onPanEnd: (_) {
-                        setState(() {
-                          fCenter += panOffset;
-                          panOffset = Offset.zero;
-                        });
-                      },
-                      child: FutureBuilder<FragmentProgram>(
+                  setState(() => panOffset = Offset(sdx, sdy));
+                },
+                onPanEnd: (_) {
+                  setState(() {
+                    fCenter += panOffset;
+                    panOffset = Offset.zero;
+                  });
+                },
+                child: FutureBuilder<FragmentProgram>(
 
-                          /// Use the generated loader function here
-                          future: fooFragmentProgram(),
-                          builder: ((context, snapshot) {
-                            print(snapshot.error);
-                            if (!snapshot.hasData) {
-                              /// Shader is loading
-                              return const CircularProgressIndicator();
-                            }
+                    /// Use the generated loader function here
+                    future: fooFragmentProgram(),
+                    builder: ((context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const CircularProgressIndicator();
+                      }
 
-                            /// Shader is ready to use
-                            return SizedBox.expand(
-                              child: CustomPaint(
-                                painter: ImageScaleShaderPainter(
-                                  painterNeeds: snapshot.data!,
-                                  center: fCenter + panOffset,
-                                  scale: scale,
-                                ),
-                              ),
-                            );
-                          })),
-                    ),
-                  ),
-                );
-              },
+                      return CustomPaint(
+                        size: Size(constraints.maxWidth, constraints.maxHeight),
+                        painter: ImageScaleShaderPainter(
+                          painterNeeds: snapshot.data!,
+                          center: fCenter + panOffset,
+                          scale: scale,
+                        ),
+                      );
+                    })),
+              );
+            },
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              color: Colors.grey.withOpacity(0.2),
+              child: Slider.adaptive(
+                value: fMagnitude,
+                min: -11,
+                max: 1,
+                activeColor: Colors.red,
+                onChanged: (v) {
+                  setState(() {
+                    fMagnitude = v;
+                  });
+                },
+              ),
             ),
-            const Spacer(),
-            Text('order: 10^${fMagnitude.toStringAsFixed(2)}\n'
-                'center: ${fCenter + panOffset}\n'
-                '${min.toStringAsExponential(2)}<=x<=${max.toStringAsExponential(2)}, width = ${scale.toStringAsExponential(2)}\n'
-                //'${yMin.toStringAsExponential(2)}<=y<=${yMax.toStringAsExponential(2)}, height = ${fHeight.toStringAsExponential(2)}',
-                ),
-            Slider.adaptive(
-              value: fMagnitude,
-              min: -11,
-              max: 1,
-              activeColor: Colors.red,
-              onChanged: (v) {
-                setState(() {
-                  fMagnitude = v;
-                });
-              },
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
