@@ -68,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       size: MediaQuery.of(context).size,
                       painter: ImageScaleShaderPainter(
                         shader: shader,
-                        center: fCenter,
+                        center: fCenter + panOffset,
                         scale: scale,
                       ),
                     ),
