@@ -1,15 +1,17 @@
-#version 320 es
+#version 460 core
+
+#include <flutter/runtime_effect.glsl>
 
 precision highp float;
 
-layout(location=0) out vec4 fragColor;
-
 layout(location=0) uniform float scale;
 layout(location=1) uniform vec2 center;
-layout(location=2) uniform vec2 iResolution;
+layout(location=2) uniform vec2 resolution;
+
+layout(location=0) out vec4 fragColor;
 
 void main(){
-    vec2 uv = gl_FragCoord.xy/iResolution.xy;
+    vec2 uv = FlutterFragCoord().xy / resolution.xy;
     vec2 z = vec2(0.0);
     vec2 c = vec2(1.0);
     float ii = 0.0;
@@ -30,7 +32,7 @@ void main(){
     float g = 0.0;
     float b = 0.0;
     if(ii < oneThird) {
-      r = ii * 3.0;
+        r = ii * 3.0;
     } else if(ii < twoThirds) {
         r = 1.0;
         g = (ii-oneThird) * 3.0;
@@ -39,5 +41,5 @@ void main(){
         g = 1.0;
         b = (ii-twoThirds) * 3.0;
     }
-   fragColor = vec4(r,g,b ,1.0);
+    fragColor = vec4(r,g,b ,1.0);
 }

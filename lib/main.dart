@@ -1,9 +1,9 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'foo_sprv.dart';
 import 'dart:math';
+
+import 'package:flutter_shaders/flutter_shaders.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,43 +44,35 @@ class _MyHomePageState extends State<MyHomePage> {
           LayoutBuilder(
             builder: (context, constraints) {
               return GestureDetector(
-                onPanStart: (value) {
-                  px = value.localPosition;
-                  panOffset = Offset.zero;
-                },
-                onPanUpdate: (value) {
-                  dpx = (value.localPosition - px!);
-
-                  final sdx = dpx!.dx * scale / constraints.maxHeight;
-                  final sdy = dpx!.dy * scale / constraints.maxHeight;
-
-                  setState(() => panOffset = Offset(sdx, sdy));
-                },
-                onPanEnd: (_) {
-                  setState(() {
-                    fCenter += panOffset;
+                  onPanStart: (value) {
+                    px = value.localPosition;
                     panOffset = Offset.zero;
-                  });
-                },
-                child: FutureBuilder<FragmentProgram>(
+                  },
+                  onPanUpdate: (value) {
+                    dpx = (value.localPosition - px!);
 
-                    /// Use the generated loader function here
-                    future: fooFragmentProgram(),
-                    builder: ((context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const CircularProgressIndicator();
-                      }
+                    final sdx = dpx!.dx * scale / constraints.maxHeight;
+                    final sdy = dpx!.dy * scale / constraints.maxHeight;
 
-                      return CustomPaint(
-                        size: Size(constraints.maxWidth, constraints.maxHeight),
-                        painter: ImageScaleShaderPainter(
-                          painterNeeds: snapshot.data!,
-                          center: fCenter + panOffset,
-                          scale: scale,
-                        ),
-                      );
-                    })),
-              );
+                    setState(() => panOffset = Offset(sdx, sdy));
+                  },
+                  onPanEnd: (_) {
+                    setState(() {
+                      fCenter += panOffset;
+                      panOffset = Offset.zero;
+                    });
+                  },
+                  child: ShaderBuilder(
+                    assetKey: 'shaders/fractal.frag',
+                    (context, shader, child) => CustomPaint(
+                      size: MediaQuery.of(context).size,
+                      painter: ImageScaleShaderPainter(
+                        shader: shader,
+                        center: fCenter,
+                        scale: scale,
+                      ),
+                    ),
+                  ));
             },
           ),
           Align(
@@ -115,29 +107,27 @@ class _MyHomePageState extends State<MyHomePage> {
 /// Customer painter that makes use of the shader
 class ImageScaleShaderPainter extends CustomPainter {
   const ImageScaleShaderPainter({
-    required this.painterNeeds,
+    required this.shader,
     required this.center,
     required this.scale,
   });
 
   final Offset center;
   final double scale;
-  final FragmentProgram painterNeeds;
+  final FragmentShader shader;
 
   @override
   void paint(Canvas canvas, Size size) {
-    /// Create paint using a shader
-    ///
-    final paint = Paint()
-      ..shader = painterNeeds.shader(
-        floatUniforms: Float32List.fromList([
-          scale,
-          center.dx,
-          center.dy,
-          size.height,
-          size.height,
-        ]),
-      );
+    final paint = Paint()..shader = shader;
+    shader.setFloatUniforms((value) {
+      value.setFloats([
+        scale,
+        center.dx,
+        center.dy,
+        size.height,
+        size.height,
+      ]);
+    });
 
     /// Draw a rectangle with the shader-paint
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
